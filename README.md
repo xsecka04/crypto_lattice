@@ -1,7 +1,7 @@
 # crypto_lattice
 WIP
 
-Real=time data visualization tool for lattice-based cryptography.
+Real-time data visualization tool for lattice-based cryptography.
 
 ## Installation of a dev environment [TODO: Create a Docker image]
 
