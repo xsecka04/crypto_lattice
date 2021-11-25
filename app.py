@@ -277,7 +277,7 @@ def bkapp_page():
     return render_template("index.html", script=script, template="Flask")
 
 def bk_worker():
-    server = Server({'/babai' : babai_app}, io_loop=IOLoop())
+    server = Server({'/babai' : babai_app}, io_loop=IOLoop(), allow_websocket_origin=['localhost:8000'])
     server.start()
     server.io_loop.start()
 
