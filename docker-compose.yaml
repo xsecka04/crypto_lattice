@@ -1,0 +1,10 @@
+version: "3.7"
+
+services:
+  babai:
+    build:
+      context: ./
+    ports: 
+      - 5006:5006
+      - 8000:8000
+
