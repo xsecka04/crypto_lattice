@@ -1,11 +1,11 @@
-FROM python:3.7-alpine
+FROM python:3.9.7
 
 WORKDIR /app
 COPY . . 
 
-RUN pip -r requirements.txt
+RUN pip install -r requirements.txt
 
-EXPOSE 5000
-EXPOSE 5006
+EXPOSE 50000:50000
+EXPOSE 50007:50007
 ENTRYPOINT ["python"]
-CMD ["app.py"]
+CMD ["run.py"]

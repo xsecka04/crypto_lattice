@@ -4,5 +4,5 @@ from . import app
 
 @app.route('/', methods=['GET'])
 def bkapp_page():
-    script = server_document('http://localhost:5006/babai')
+    script = server_document('http://localhost:50007/babai')
     return render_template("index.html", script=script, template="Flask")
