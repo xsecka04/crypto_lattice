@@ -270,19 +270,19 @@ def babai_app(doc):
     #return render_template("index.html", script=script, template="Flask")
     #return render_template("index.html")
 
-#@app.route('/', methods=['GET'])
-#def bkapp_page():
-#    script = server_document('http://localhost:5006/babai')
-#    return render_template("index.html", script=script, template="Flask")
+@app.route('/', methods=['GET'])
+def bkapp_page():
+    script = server_document('http://localhost:5006/babai')
+    return render_template("index.html", script=script, template="Flask")
 
 
-#def bk_worker():
-#    server = Server({'/babai' : babai_app}, io_loop=IOLoop(), allow_websocket_origin=['localhost:8000', '127.0.0.1:8000'])
-#    server.start()
-#    server.io_loop.start()
+def bk_worker():
+    server = Server({'/babai' : babai_app}, io_loop=IOLoop(), allow_websocket_origin=['localhost:8000', '127.0.0.1:8000'])
+    server.start()
+    server.io_loop.start()
 
-#Thread(target=bk_worker).start()
+Thread(target=bk_worker).start()
 
 
-#if __name__ == "__main__":
-#    app.run(debug=True, port=80)
+if __name__ == "__main__":
+    app.run(debug=True, port=5500)
