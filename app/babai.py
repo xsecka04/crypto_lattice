@@ -1,18 +1,13 @@
-from flask import Flask, render_template
-from bokeh.models import ColumnDataSource, Div, Select, Slider, TextInput, CustomJS, Range1d, Arrow, OpenHead, NormalHead, TapTool, Button
-from bokeh.io import curdoc
-from bokeh.resources import INLINE
-from bokeh.embed import components, server_document
+from bokeh.models import ColumnDataSource, Div, Slider, TextInput, Range1d, Arrow, OpenHead, NormalHead, TapTool, Button
 from bokeh.layouts import row, column
-import numpy as np
-from bokeh.plotting import figure, output_file, show
+from bokeh.plotting import figure
 from bokeh.events import Tap
-from bokeh.server.server import Server
-from tornado.ioloop import IOLoop
-import random
-from threading import Thread
 
-app = Flask(__name__)
+import random
+from bokeh.server.server import Server
+import numpy as np
+from tornado.ioloop import IOLoop
+
 
 def babai_app(doc):
     def generate_lattice(basis):
@@ -265,24 +260,4 @@ def babai_app(doc):
     doc.add_root(row(buttons, baseplot, uniplot, width=400))
     doc.title = "Lattice-based Cryptography"
 
-    #    return render_template('index.html')
-    #script = server_document('http://127.0.0.1:5006/app')
-    #return render_template("index.html", script=script, template="Flask")
-    #return render_template("index.html")
 
-#@app.route('/', methods=['GET'])
-#def bkapp_page():
-#    script = server_document('http://localhost:5006/babai')
-#    return render_template("index.html", script=script, template="Flask")
-
-
-#def bk_worker():
-#    server = Server({'/babai' : babai_app}, io_loop=IOLoop(), allow_websocket_origin=['localhost:8000', '127.0.0.1:8000'])
-#    server.start()
-#    server.io_loop.start()
-
-#Thread(target=bk_worker).start()
-
-
-#if __name__ == "__main__":
-#    app.run(debug=True, port=80)
