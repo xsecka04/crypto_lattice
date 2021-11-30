@@ -17,7 +17,7 @@ def babai_app(doc):
         yval.append(0)
         for a in range(-50, 50):
             for b in range(-50, 50):
-    #           if mod is not 0:                
+    #           if mod is not 0:
     #               xnew = (a * basis[0][0] + b * basis[0][1]) % mod
     #               xval.append(xnew)
     #              ynew = (a * basis[1][0] + b * basis[1][1]) % mod
@@ -41,30 +41,25 @@ def babai_app(doc):
 
 
     def solve_babai(basis, t):
-        res = np.array([t[0],t[1]])
-        print(f"babai fist step {res}")
+        res = np.array([[t[0]],[t[1]]])
         a = np.round(np.linalg.solve(basis, res))
-        print(f"babai round step {a}")
         dot = np.dot(basis, a)
         return dot
 
 
     def rand_unimod(n):
-        random_matrix = [ [np.random.randint(-3,3) for _ in range(n) ] for _ in range(n) ]
-        upperTri = np.triu(random_matrix,0)
-        lowerTri = [[np.random.randint(-3,3) if x<y else 0 for x in range(n)] for y in range(n)]  
+        upperTri = np.triu([[np.random.randint(-3,3) for _ in range(n) ] for _ in range(n)],1)
+        lowerTri = np.tril([[np.random.randint(-3,3) for _ in range(n) ] for _ in range(n)],-1) 
 
         for r in range(len(upperTri)):
             for c in range(len(upperTri)):
                 if(r==c):
                     if bool(random.getrandbits(1)):
-                        upperTri[r][c]=1
-                        lowerTri[r][c]=1
+                        upperTri[r][c] = lowerTri[r][c] = 1
                     else:
-                        upperTri[r][c]=-1
-                        lowerTri[r][c]=-1
-        uniModular = np.matmul(upperTri,lowerTri)
-        return uniModular
+                        upperTri[r][c] = lowerTri[r][c] = -1
+
+        return np.matmul(upperTri,lowerTri)
 
 
     def regenerate_lattice(basis):
@@ -96,14 +91,14 @@ def babai_app(doc):
     basis = np.array([[2, 1], [1, 2]])
     x, y = generate_lattice(basis)
 
-    # Create data sources for lattice and basis
+    # Create data sources for lattice, bases and calculations
     source = ColumnDataSource(data=dict(x=x, y=y))
     bsource = ColumnDataSource(data=dict(x=basis[0], y=basis[1], xu=np.array([0, 0]), yu=np.array([0, 0]), hadamard=[hadamard_ratio(basis), 0]))
     csource = ColumnDataSource(data=dict(xb=[0], xub=[0], yb=[0], yub=[0], xsource=[0], ysource=[0], independence=[1]))
     # Define lattice plot
 
     p.circle('x', 'y', source=source, size=10, color="navy", alpha=0.5)
-    p2 = figure(width=400,height=400, x_range=p.x_range, y_range=p.y_range, title="Basis with applied uminodular matrix")
+    p2 = figure(width=400,height=400, x_range=p.x_range, y_range=p.y_range, title="Basis with applied uminodular matrix", tools="save")
 
     p2.circle('x', 'y', source=source, size=10, color="navy", alpha=0.5)
 
@@ -138,13 +133,10 @@ def babai_app(doc):
 
     def babai_callback(event):
         coords=(round(event.x, 3), round(event.y, 3))
-        print(coords)
         basis = np.array([bsource.data['x'], bsource.data['y']])
-        print(basis)
         ubasis = np.array([bsource.data['xu'], bsource.data['yu']])
         cvp = solve_babai(basis, coords)
         ucvp = solve_babai(ubasis, coords)
-        print(cvp)
         csource.data = dict(xb=[cvp[0]], xub=[ucvp[0]], yb=[cvp[1]], yub=[ucvp[1]], xsource=[coords[0]], ysource=[coords[1]], independence=csource.data['independence'])
 
 
@@ -205,7 +197,6 @@ def babai_app(doc):
 
     def unimod_callback(event):
         basis = bsource.data
-        print(basis)
     #   try:
     #       newbasis = np.array([[basis['x'][2], basis['x'][3]], [basis['y'][2], basis['y'][3]]])
     #       print(f"true{newbasis}")
@@ -214,7 +205,6 @@ def babai_app(doc):
     #       print(f"false{newbasis}")
 
         newbasis = np.matmul(np.array([basis['x'], basis['y']]),rand_unimod(2))
-        print(newbasis)
     #  new_data = {
     #  'x' : newbasis[0],
     #   'y' : newbasis[1],
@@ -248,7 +238,7 @@ def babai_app(doc):
     x2.on_change('value', x2_callback)
     y2.on_change('value', y2_callback)
 
-    independence = Div(text=f"""Basis vectors are {"not" if csource.data['independence'] == 1 else ""} independent.""", width=200, height=50)
+    independence = Div(text=f"""Basis vectors are {"not" if csource.data['independence'] == 1 else ""} independent.""", width=200, height=10)
     hadamard = Div(text=f"""Hadamard Ratio: {bsource.data['hadamard'][0]}""", width=200, height=100)
     hadamard2 = Div(text=f"""Hadamard Ratio: {bsource.data['hadamard'][1]}""", width=200, height=100)
 
