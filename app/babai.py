@@ -17,16 +17,10 @@ def babai_app(doc):
         yval.append(0)
         for a in range(-50, 50):
             for b in range(-50, 50):
-    #           if mod is not 0:
-    #               xnew = (a * basis[0][0] + b * basis[0][1]) % mod
-    #               xval.append(xnew)
-    #              ynew = (a * basis[1][0] + b * basis[1][1]) % mod
-    #              yval.append(ynew)
-    #           else:
-                    xnew = a * basis[0][0] + b * basis[0][1]
-                    xval.append(xnew)
-                    ynew = a * basis[1][0] + b * basis[1][1]
-                    yval.append(ynew)
+                xnew = a * basis[0][0] + b * basis[0][1]
+                xval.append(xnew)
+                ynew = a * basis[1][0] + b * basis[1][1]
+                yval.append(ynew)
         return xval, yval
 
 
@@ -186,36 +180,14 @@ def babai_app(doc):
         newbasis = np.array([basis['x'], basis['y']])
         regenerate_lattice(newbasis)
 
-    #def mod_callback(attr, old, new):
-    #    try:
-    #        new = int(new)
-    #    except ValueError:
-    #        new = old
-
-    #    regenerate_lattice(bsource.data)
-
 
     def unimod_callback(event):
         basis = bsource.data
-    #   try:
-    #       newbasis = np.array([[basis['x'][2], basis['x'][3]], [basis['y'][2], basis['y'][3]]])
-    #       print(f"true{newbasis}")
-    #   except IndexError:
-    #       newbasis = np.array([basis['x'], basis['y']])
-    #       print(f"false{newbasis}")
-
         newbasis = np.matmul(np.array([basis['x'], basis['y']]),rand_unimod(2))
-    #  new_data = {
-    #  'x' : newbasis[0],
-    #   'y' : newbasis[1],
-    #    'hadamard': [hadamard_ratio(newbasis), 0]
-    #    }
         bsource.data = dict(x=bsource.data['x'], y=bsource.data['y'], xu=newbasis[0], yu=newbasis[1], hadamard=[bsource.data['hadamard'][0], hadamard_ratio(newbasis)])
-    #    bsource.stream(new_data)
         hadamard2.text = f"""Hadamard Ratio: {bsource.data['hadamard'][1]}"""
 
-
-
+    #Defining the UI elements
     x1 = Slider(title="X1", value=2, start=-10, end=10, step=1)
     x2 = Slider(title="X2", value=1, start=-10, end=10, step=1)
     y1 = Slider(title="Y1", value=1, start=-10, end=10, step=1)
@@ -229,9 +201,6 @@ def babai_app(doc):
     y1_input.on_change('value', x1_callback)
     y2_input = TextInput(value="2", title="Y2:")
     y2_input.on_change('value', x1_callback)
-
-    #mod_input = TextInput(value="0", title="Modular group q:")
-    #mod_input.on_change('value', mod_callback)
 
     x1.on_change('value', x1_callback)
     y1.on_change('value', y1_callback)
@@ -247,11 +216,12 @@ def babai_app(doc):
 
     p.add_tools(TapTool())
     p.on_event(Tap, babai_callback)
-
-    buttons = column(x1, x1_input, y1, y1_input, x2, x2_input, y2, y2_input, button, independence)
-    baseplot = column(p, hadamard)
-    uniplot = column(p2, hadamard2)
-    doc.add_root(row(buttons, baseplot, uniplot, width=400))
+    
+    #Defining the layout 
+    buttons = column(x1, x1_input, y1, y1_input, x2, x2_input, y2, y2_input, button, independence, width=250)
+    baseplot = column(p, hadamard, width=400)
+    uniplot = column(p2, hadamard2, width=400)
+    doc.add_root(row(buttons, baseplot, uniplot))
     doc.title = "Lattice-based Cryptography"
 
 
