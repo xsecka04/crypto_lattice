@@ -3,21 +3,24 @@ WIP
 
 Real-time data visualization tool for lattice-based cryptography.
 
-## Installation of a dev environment [TODO: Create a Docker image]
+## Cretion of the docker image
 
 ```bash
 git clone https://github.com/xsecka04/crypto_lattice
 cd crypto_lattice
-pip install virtualenv
-virtualenv venv 
-source venv/bin/activate 
-pip install -r requirements.txt
+docker build -t babai .
+docker run -d -p 50000:50000 -p 50007:50007 --name=babai-server -t -i babai
+```
+This will start the server. To stop the server, use 
+
+```bash
+docker stop babai-server
 ```
 
 ## Start the server
 
 ```bash
-bokeh serve --show app.py
+docker start babai-server
 ```
 
 

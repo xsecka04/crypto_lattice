@@ -1,18 +1,13 @@
-from flask import Flask, render_template
-from bokeh.models import ColumnDataSource, Div, Select, Slider, TextInput, CustomJS, Range1d, Arrow, OpenHead, NormalHead, TapTool, Button
-from bokeh.io import curdoc
-from bokeh.resources import INLINE
-from bokeh.embed import components, server_document
+from bokeh.models import ColumnDataSource, Div, Slider, TextInput, Range1d, Arrow, OpenHead, NormalHead, TapTool, Button
 from bokeh.layouts import row, column
-import numpy as np
-from bokeh.plotting import figure, output_file, show
+from bokeh.plotting import figure
 from bokeh.events import Tap
-from bokeh.server.server import Server
-from tornado.ioloop import IOLoop
-import random
-from threading import Thread
 
-app = Flask(__name__)
+import random
+import numpy as np
+from sympy import *
+
+
 
 def babai_app(doc):
     def generate_lattice(basis):
@@ -22,18 +17,10 @@ def babai_app(doc):
         yval.append(0)
         for a in range(-50, 50):
             for b in range(-50, 50):
-    #           if mod is not 0:                
-    #               xnew = (a * basis[0][0] + b * basis[0][1]) % mod
-    #               xval.append(xnew)
-    #              ynew = (a * basis[1][0] + b * basis[1][1]) % mod
-    #              yval.append(ynew)
-    #           else:
-                    xnew = a * basis[0][0] + b * basis[0][1]
-                    xval.append(xnew)
-                    ynew = a * basis[1][0] + b * basis[1][1]
-                    yval.append(ynew)
-
-
+                xnew = a * basis[0][0] + b * basis[0][1]
+                xval.append(xnew)
+                ynew = a * basis[1][0] + b * basis[1][1]
+                yval.append(ynew)
         return xval, yval
 
 
@@ -48,33 +35,25 @@ def babai_app(doc):
 
 
     def solve_babai(basis, t):
-        res = np.array([t[0],t[1]])
-        print(f"babai fist step {res}")
+        res = np.array([[t[0]],[t[1]]])
         a = np.round(np.linalg.solve(basis, res))
-        print(f"babai round step {a}")
+        dot = np.dot(basis, a)
+        return dot
 
-        return np.dot(a, basis)
 
-
-    #def rand_unimod(seed,n):
     def rand_unimod(n):
-        #np.random.seed(seed)
-        #random.seed(seed)
-        random_matrix = [ [np.random.randint(-3,3) for _ in range(n) ] for _ in range(n) ]
-        upperTri = np.triu(random_matrix,0)
-        lowerTri = [[np.random.randint(-3,3) if x<y else 0 for x in range(n)] for y in range(n)]  
+        upperTri = np.triu([[np.random.randint(-3,3) for _ in range(n) ] for _ in range(n)],1)
+        lowerTri = np.tril([[np.random.randint(-3,3) for _ in range(n) ] for _ in range(n)],-1) 
 
         for r in range(len(upperTri)):
             for c in range(len(upperTri)):
                 if(r==c):
                     if bool(random.getrandbits(1)):
-                        upperTri[r][c]=1
-                        lowerTri[r][c]=1
+                        upperTri[r][c] = lowerTri[r][c] = 1
                     else:
-                        upperTri[r][c]=-1
-                        lowerTri[r][c]=-1
-        uniModular = np.matmul(upperTri,lowerTri)
-        return uniModular
+                        upperTri[r][c] = lowerTri[r][c] = -1
+
+        return np.matmul(upperTri,lowerTri)
 
 
     def regenerate_lattice(basis):
@@ -83,8 +62,12 @@ def babai_app(doc):
         bsource.data = dict(x=basis[0], y=basis[1], xu=bsource.data['xu'], yu=bsource.data['yu'], hadamard=[hadamard_ratio(basis), bsource.data['hadamard'][1]])
         hadamard.text = f"""Hadamard Ratio: {bsource.data['hadamard'][0]}"""
 
+        (lambdas, V) = np.linalg.eig(basis.T)
+        i = 1 if basis[lambdas == 0, :].size == 0 else 0
+        csource.data = dict(xb=csource.data['xb'], xub=csource.data['xub'], yb=csource.data['yb'], yub=csource.data['yub'], xsource=csource.data['xsource'], ysource=csource.data['ysource'], independence=[i])
+        negation = "not" if i == 0 else ""
+        independence.text = f"""Basis vectors are {negation} independent."""
 
-    #output_file("app.html")
 
     # Define the figure plot
     p = figure(
@@ -102,14 +85,14 @@ def babai_app(doc):
     basis = np.array([[2, 1], [1, 2]])
     x, y = generate_lattice(basis)
 
-    # Create data sources for lattice and basis
+    # Create data sources for lattice, bases and calculations
     source = ColumnDataSource(data=dict(x=x, y=y))
     bsource = ColumnDataSource(data=dict(x=basis[0], y=basis[1], xu=np.array([0, 0]), yu=np.array([0, 0]), hadamard=[hadamard_ratio(basis), 0]))
-    csource = ColumnDataSource(data=dict(xb=[0], xub=[0], yb=[0], yub=[0], xsource=[0], ysource=[0]))
+    csource = ColumnDataSource(data=dict(xb=[0], xub=[0], yb=[0], yub=[0], xsource=[0], ysource=[0], independence=[1]))
     # Define lattice plot
 
     p.circle('x', 'y', source=source, size=10, color="navy", alpha=0.5)
-    p2 = figure(width=400,height=400, x_range=p.x_range, y_range=p.y_range, title="Basis with applied uminodular matrix")
+    p2 = figure(width=400,height=400, x_range=p.x_range, y_range=p.y_range, title="Basis with applied uminodular matrix", tools="save")
 
     p2.circle('x', 'y', source=source, size=10, color="navy", alpha=0.5)
 
@@ -123,31 +106,32 @@ def babai_app(doc):
     p.add_layout(Arrow(end=OpenHead(line_color="firebrick", line_width=4),
                     x_start=0, y_start=0, x_end='xc', y_end='yc', source=bsource))
 
-    p2.add_layout(Arrow(end=NormalHead(line_color="green", line_width=4),
-                    x_start=0, y_start=0, x_end='xub', y_end='yub', source=csource))
+    babai_unimod = Arrow(end=NormalHead(line_color="orange", line_width=4),
+                    x_start=0, y_start=0, x_end='xub', y_end='yub', source=csource)
+    babai_normal = Arrow(end=NormalHead(line_color="orange", line_width=4),
+                    x_start=0, y_start=0, x_end='xb', y_end='yb', source=csource)
 
-    p.add_layout(Arrow(end=NormalHead(line_color="green", line_width=4),
-                    x_start=0, y_start=0, x_end='xb', y_end='yb', source=csource))
+    p2.add_layout(babai_unimod)
 
-    p2.add_layout(Arrow(end=NormalHead(line_color="orange", line_width=4),
-                    x_start=0, y_start=0, x_end='xsource', y_end='ysource', source=csource))
+    p.add_layout(babai_normal)
 
-    p.add_layout(Arrow(end=NormalHead(line_color="orange", line_width=4),
-                    x_start=0, y_start=0, x_end='xsource', y_end='ysource', source=csource))
+    selection_arrow = Arrow(end=NormalHead(line_color="yellow", line_width=4),
+                    x_start=0, y_start=0, x_end='xsource', y_end='ysource', source=csource)
+
+    p2.add_layout(selection_arrow)
+
+    p.add_layout(selection_arrow)
 
 
 
 
     def babai_callback(event):
         coords=(round(event.x, 3), round(event.y, 3))
-        print(coords)
         basis = np.array([bsource.data['x'], bsource.data['y']])
-        print(basis)
         ubasis = np.array([bsource.data['xu'], bsource.data['yu']])
         cvp = solve_babai(basis, coords)
         ucvp = solve_babai(ubasis, coords)
-        print(cvp)
-        csource.data = dict(xb=[cvp[0]], xub=[ucvp[0]], yb=[cvp[1]], yub=[ucvp[1]], xsource=[coords[0]], ysource=[coords[1]])
+        csource.data = dict(xb=[cvp[0]], xub=[ucvp[0]], yb=[cvp[1]], yub=[ucvp[1]], xsource=[coords[0]], ysource=[coords[1]], independence=csource.data['independence'])
 
 
     def x1_callback(attr, old, new):
@@ -196,38 +180,14 @@ def babai_app(doc):
         newbasis = np.array([basis['x'], basis['y']])
         regenerate_lattice(newbasis)
 
-    #def mod_callback(attr, old, new):
-    #    try:
-    #        new = int(new)
-    #    except ValueError:
-    #        new = old
-
-    #    regenerate_lattice(bsource.data)
-
 
     def unimod_callback(event):
         basis = bsource.data
-        print(basis)
-    #   try:
-    #       newbasis = np.array([[basis['x'][2], basis['x'][3]], [basis['y'][2], basis['y'][3]]])
-    #       print(f"true{newbasis}")
-    #   except IndexError:
-    #       newbasis = np.array([basis['x'], basis['y']])
-    #       print(f"false{newbasis}")
-
         newbasis = np.matmul(np.array([basis['x'], basis['y']]),rand_unimod(2))
-        print(newbasis)
-    #  new_data = {
-    #  'x' : newbasis[0],
-    #   'y' : newbasis[1],
-    #    'hadamard': [hadamard_ratio(newbasis), 0]
-    #    }
         bsource.data = dict(x=bsource.data['x'], y=bsource.data['y'], xu=newbasis[0], yu=newbasis[1], hadamard=[bsource.data['hadamard'][0], hadamard_ratio(newbasis)])
-    #    bsource.stream(new_data)
         hadamard2.text = f"""Hadamard Ratio: {bsource.data['hadamard'][1]}"""
 
-
-
+    #Defining the UI elements
     x1 = Slider(title="X1", value=2, start=-10, end=10, step=1)
     x2 = Slider(title="X2", value=1, start=-10, end=10, step=1)
     y1 = Slider(title="Y1", value=1, start=-10, end=10, step=1)
@@ -242,47 +202,26 @@ def babai_app(doc):
     y2_input = TextInput(value="2", title="Y2:")
     y2_input.on_change('value', x1_callback)
 
-    #mod_input = TextInput(value="0", title="Modular group q:")
-    #mod_input.on_change('value', mod_callback)
-
     x1.on_change('value', x1_callback)
     y1.on_change('value', y1_callback)
     x2.on_change('value', x2_callback)
     y2.on_change('value', y2_callback)
 
+    independence = Div(text=f"""Basis vectors are {"not" if csource.data['independence'] == 1 else ""} independent.""", width=200, height=10)
     hadamard = Div(text=f"""Hadamard Ratio: {bsource.data['hadamard'][0]}""", width=200, height=100)
     hadamard2 = Div(text=f"""Hadamard Ratio: {bsource.data['hadamard'][1]}""", width=200, height=100)
 
     button = Button(label="Apply Unimodular matrix", button_type="default")
     button.on_click(unimod_callback)
 
-    taptool = p.add_tools(TapTool())
+    p.add_tools(TapTool())
     p.on_event(Tap, babai_callback)
-
-    buttons = column(x1, x1_input, y1, y1_input, x2, x2_input, y2, y2_input, button)
-    baseplot = column(p, hadamard)
-    uniplot = column(p2, hadamard2)
-    doc.add_root(row(buttons, baseplot, uniplot, width=400))
+    
+    #Defining the layout 
+    buttons = column(x1, x1_input, y1, y1_input, x2, x2_input, y2, y2_input, button, independence, width=250)
+    baseplot = column(p, hadamard, width=400)
+    uniplot = column(p2, hadamard2, width=400)
+    doc.add_root(row(buttons, baseplot, uniplot))
     doc.title = "Lattice-based Cryptography"
 
-    #    return render_template('index.html')
-    #script = server_document('http://127.0.0.1:5006/app')
-    #return render_template("index.html", script=script, template="Flask")
-    #return render_template("index.html")
 
-
-@app.route('/', methods=['GET'])
-def bkapp_page():
-    script = server_document('http://localhost:5006/babai')
-    return render_template("index.html", script=script, template="Flask")
-
-def bk_worker():
-    server = Server({'/babai' : babai_app}, io_loop=IOLoop(), allow_websocket_origin=['localhost:8000'])
-    server.start()
-    server.io_loop.start()
-
-Thread(target=bk_worker).start()
-
-
-if __name__ == "__main__":
-    app.run(debug=True, port=8000)
