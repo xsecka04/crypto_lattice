@@ -12,6 +12,6 @@ def bk_worker():
 Thread(target=bk_worker).start()
 
 if __name__ == "__main__":
-    from waitress import serve #use this in production environment
-    serve(app, host="0.0.0.0", port=50000)
-    #app.run(debug=True, host="0.0.0.0", port=50000) #use this in dev environment
+    #from waitress import serve #use this in production environment
+    #serve(app, host="0.0.0.0", port=50000)
+    app.run(debug=True, host="0.0.0.0", port=50000) #use this in dev environment
