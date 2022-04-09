@@ -6,7 +6,15 @@ import os
 #ip = os.environ.get('IP')
 
 @app.route('/', methods=['GET'])
-def bkapp_page():
+def babai_page():
     #script = server_document(f'http://{ip}:50007/babai')
     script = server_document(f'http://localhost:50007/babai')
+    return render_template("index.html", script=script, template="Flask")
+
+
+
+@app.route('/lwe', methods=['GET'])
+def lwe_page():
+    #script = server_document(f'http://{ip}:50007/babai')
+    script = server_document(f'http://localhost:50008/lwe')
     return render_template("index.html", script=script, template="Flask")
