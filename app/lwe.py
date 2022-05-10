@@ -7,210 +7,221 @@ import random
 import numpy as np
 from sympy import *
 
-from bokeh.core.properties import Instance, String
-from bokeh.io import show
-from bokeh.models import ColumnDataSource, LayoutDOM
-from bokeh.util.compiler import TypeScript
 
 
 def lwe_app(doc):
-    TS_CODE = """
-    // This custom model wraps one part of the third-party vis.js library:
-    //
-    //     http://visjs.org/index.html
-    //
-    // Making it easy to hook up python data analytics tools (NumPy, SciPy,
-    // Pandas, etc.) to web presentations using the Bokeh server.
-
-    import {LayoutDOM, LayoutDOMView} from "models/layouts/layout_dom"
-    import {ColumnDataSource} from "models/sources/column_data_source"
-    import {LayoutItem} from "core/layout"
-    import * as p from "core/properties"
-
-    declare namespace vis {
-    class Graph3d {
-        constructor(el: HTMLElement, data: object, OPTIONS: object)
-        setData(data: vis.DataSet): void
-    }
-
-    class DataSet {
-        add(data: unknown): void
-    }
-    }
-
-    // This defines some default options for the Graph3d feature of vis.js
-    // See: http://visjs.org/graph3d_examples.html for more details.
-    const OPTIONS = {
-    width: '600px',
-    height: '600px',
-    style: 'surface',
-    showPerspective: true,
-    showGrid: true,
-    keepAspectRatio: true,
-    verticalRatio: 1.0,
-    legendLabel: 'stuff',
-    cameraPosition: {
-        horizontal: -0.35,
-        vertical: 0.22,
-        distance: 1.8,
-    },
-    }
-    // To create custom model extensions that will render on to the HTML canvas
-    // or into the DOM, we must create a View subclass for the model.
-    //
-    // In this case we will subclass from the existing BokehJS ``LayoutDOMView``
-    export class Surface3dView extends LayoutDOMView {
-    model: Surface3d
-
-    private _graph: vis.Graph3d
-
-    initialize(): void {
-        super.initialize()
-
-        const url = "https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis.min.js"
-        const script = document.createElement("script")
-        script.onload = () => this._init()
-        script.async = false
-        script.src = url
-        document.head.appendChild(script)
-    }
-
-    private _init(): void {
-        // Create a new Graph3s using the vis.js API. This assumes the vis.js has
-        // already been loaded (e.g. in a custom app template). In the future Bokeh
-        // models will be able to specify and load external scripts automatically.
-        //
-        // BokehJS Views create <div> elements by default, accessible as this.el.
-        // Many Bokeh views ignore this default <div>, and instead do things like
-        // draw to the HTML canvas. In this case though, we use the <div> to attach
-        // a Graph3d to the DOM.
-        this._graph = new vis.Graph3d(this.el, this.get_data(), OPTIONS)
-
-        // Set a listener so that when the Bokeh data source has a change
-        // event, we can process the new data
-        this.connect(this.model.data_source.change, () => {
-        this._graph.setData(this.get_data())
-        })
-    }
-
-    // This is the callback executed when the Bokeh data has an change. Its basic
-    // function is to adapt the Bokeh data source to the vis.js DataSet format.
-    get_data(): vis.DataSet {
-        const data = new vis.DataSet()
-        const source = this.model.data_source
-        for (let i = 0; i < source.get_length()!; i++) {
-        data.add({
-            x: source.data[this.model.x][i],
-            y: source.data[this.model.y][i],
-            z: source.data[this.model.z][i],
-        })
-        }
-        return data
-    }
-
-    get child_models(): LayoutDOM[] {
-        return []
-    }
-
-    _update_layout(): void {
-        this.layout = new LayoutItem()
-        this.layout.set_sizing(this.box_sizing())
-    }
-    }
-
-    // We must also create a corresponding JavaScript BokehJS model subclass to
-    // correspond to the python Bokeh model subclass. In this case, since we want
-    // an element that can position itself in the DOM according to a Bokeh layout,
-    // we subclass from ``LayoutDOM``
-    export namespace Surface3d {
-    export type Attrs = p.AttrsOf<Props>
-
-    export type Props = LayoutDOM.Props & {
-        x: p.Property<string>
-        y: p.Property<string>
-        z: p.Property<string>
-        data_source: p.Property<ColumnDataSource>
-    }
-    }
-
-    export interface Surface3d extends Surface3d.Attrs {}
-
-    export class Surface3d extends LayoutDOM {
-    properties: Surface3d.Props
-    __view_type__: Surface3dView
-
-    constructor(attrs?: Partial<Surface3d.Attrs>) {
-        super(attrs)
-    }
-
-    // The ``__name__`` class attribute should generally match exactly the name
-    // of the corresponding Python class. Note that if using TypeScript, this
-    // will be automatically filled in during compilation, so except in some
-    // special cases, this shouldn't be generally included manually, to avoid
-    // typos, which would prohibit serialization/deserialization of this model.
-    static __name__ = "Surface3d"
-
-    static {
-        // This is usually boilerplate. In some cases there may not be a view.
-        this.prototype.default_view = Surface3dView
-
-        // The @define block adds corresponding "properties" to the JS model. These
-        // should basically line up 1-1 with the Python model class. Most property
-        // types have counterparts, e.g. ``bokeh.core.properties.String`` will be
-        // ``String`` in the JS implementatin. Where the JS type system is not yet
-        // as rich, you can use ``p.Any`` as a "wildcard" property type.
-        this.define<Surface3d.Props>(({String, Ref}) => ({
-        x:            [ String ],
-        y:            [ String ],
-        z:            [ String ],
-        data_source:  [ Ref(ColumnDataSource) ],
-        }))
-    }
-    }
-    """
-
-    # This custom extension model will have a DOM view that should layout-able in
-    # Bokeh layouts, so use ``LayoutDOM`` as the base class. If you wanted to create
-    # a custom tool, you could inherit from ``Tool``, or from ``Glyph`` if you
-    # wanted to create a custom glyph, etc.
-    class Surface3d(LayoutDOM):
-
-        # The special class attribute ``__implementation__`` should contain a string
-        # of JavaScript code that implements the browser side of the extension model.
-        __implementation__ = TypeScript(TS_CODE)
-
-        # Below are all the "properties" for this model. Bokeh properties are
-        # class attributes that define the fields (and their types) that can be
-        # communicated automatically between Python and the browser. Properties
-        # also support type validation. More information about properties in
-        # can be found here:
-        #
-        #    https://docs.bokeh.org/en/latest/docs/reference/core/properties.html#bokeh-core-properties
-
-        # This is a Bokeh ColumnDataSource that can be updated in the Bokeh
-        # server by Python code
-        data_source = Instance(ColumnDataSource)
-
-        # The vis.js library that we are wrapping expects data for x, y, and z.
-        # The data will actually be stored in the ColumnDataSource, but these
-        # properties let us specify the *name* of the column that should be
-        # used for each field.
-        x = String()
-
-        y = String()
-
-        z = String()
+    def generate_lattice(basis):
+        xval = []
+        yval = []
+        xval.append(0)
+        yval.append(0)
+        for a in range(-50, 50):
+            for b in range(-50, 50):
+                xnew = a * basis[0][0] + b * basis[0][1]
+                xval.append(xnew)
+                ynew = a * basis[1][0] + b * basis[1][1]
+                yval.append(ynew)
+        return xval, yval
 
 
-    x = np.arange(0, 300, 10)
-    y = np.arange(0, 300, 10)
-    xx, yy = np.meshgrid(x, y)
-    xx = xx.ravel()
-    yy = yy.ravel()
-    value = np.sin(xx / 50) * np.cos(yy / 50) * 50 + 50
+    def hadamard_ratio(basis):
+        dimension = basis.ndim
+        det = abs(np.linalg.det(basis))
+        mult = 1
+        for v in basis:
+            mult = mult * np.linalg.norm(v)
+        hratio = (det / mult) ** (1.0 / dimension)
+        return hratio
 
-    source = ColumnDataSource(data=dict(x=xx, y=yy, z=value))
 
-    surface = Surface3d(x="x", y="y", z="z", data_source=source, width=600, height=600)
+    def solve_babai(basis, t):
+        res = np.array([[t[0]],[t[1]]])
+        a = np.round(np.linalg.solve(basis, res))
+        dot = np.dot(basis, a)
+        return dot
 
-    show(surface)
+
+    def rand_unimod(n):
+        upperTri = np.triu([[np.random.randint(-3,3) for _ in range(n) ] for _ in range(n)],1)
+        lowerTri = np.tril([[np.random.randint(-3,3) for _ in range(n) ] for _ in range(n)],-1) 
+
+        for r in range(len(upperTri)):
+            for c in range(len(upperTri)):
+                if(r==c):
+                    if bool(random.getrandbits(1)):
+                        upperTri[r][c] = lowerTri[r][c] = 1
+                    else:
+                        upperTri[r][c] = lowerTri[r][c] = -1
+
+        return np.matmul(upperTri,lowerTri)
+
+
+    def regenerate_lattice(basis):
+        x, y = generate_lattice(basis)
+        source.data = dict(x=x, y=y)
+        bsource.data = dict(x=basis[0], y=basis[1], xu=bsource.data['xu'], yu=bsource.data['yu'], hadamard=[hadamard_ratio(basis), bsource.data['hadamard'][1]])
+        hadamard.text = f"""Hadamard Ratio: {bsource.data['hadamard'][0]}"""
+
+        (lambdas, V) = np.linalg.eig(basis.T)
+        i = 1 if basis[lambdas == 0, :].size == 0 else 0
+        csource.data = dict(xb=csource.data['xb'], xub=csource.data['xub'], yb=csource.data['yb'], yub=csource.data['yub'], xsource=csource.data['xsource'], ysource=csource.data['ysource'], independence=[i])
+        negation = "not" if i == 0 else ""
+        independence.text = f"""Basis vectors are {negation} independent."""
+
+
+    # Define the figure plot
+    p = figure(
+        title="Lattice with defined basis",
+        width=400,
+        height=400,
+        tools="pan, wheel_zoom, reset, save"
+    )
+
+    # Set Ranges for the graph axis
+    p.x_range = Range1d(0, 10)
+    p.y_range = Range1d(0, 10)
+
+    # Initialize the plot with arbitrary lattice
+    basis = np.array([[2, 1], [1, 2]])
+    x, y = generate_lattice(basis)
+
+    # Create data sources for lattice, bases and calculations
+    source = ColumnDataSource(data=dict(x=x, y=y))
+    bsource = ColumnDataSource(data=dict(x=basis[0], y=basis[1], xu=np.array([0, 0]), yu=np.array([0, 0]), hadamard=[hadamard_ratio(basis), 0]))
+    csource = ColumnDataSource(data=dict(xb=[0], xub=[0], yb=[0], yub=[0], xsource=[0], ysource=[0], independence=[1]))
+    # Define lattice plot
+
+    p.circle('x', 'y', source=source, size=10, color="navy", alpha=0.5)
+    p2 = figure(width=400,height=400, x_range=p.x_range, y_range=p.y_range, title="Basis with applied uminodular matrix", tools="save")
+
+    p2.circle('x', 'y', source=source, size=10, color="navy", alpha=0.5)
+
+    # Define basis vector plot
+    p.add_layout(Arrow(end=OpenHead(line_color="firebrick", line_width=4),
+                    x_start=0, y_start=0, x_end='x', y_end='y', source=bsource))
+
+    p2.add_layout(Arrow(end=OpenHead(line_color="firebrick", line_width=4),
+                    x_start=0, y_start=0, x_end='xu', y_end='yu', source=bsource))
+
+    p.add_layout(Arrow(end=OpenHead(line_color="firebrick", line_width=4),
+                    x_start=0, y_start=0, x_end='xc', y_end='yc', source=bsource))
+
+    babai_unimod = Arrow(end=NormalHead(line_color="orange", line_width=4),
+                    x_start=0, y_start=0, x_end='xub', y_end='yub', source=csource)
+    babai_normal = Arrow(end=NormalHead(line_color="orange", line_width=4),
+                    x_start=0, y_start=0, x_end='xb', y_end='yb', source=csource)
+
+    p2.add_layout(babai_unimod)
+
+    p.add_layout(babai_normal)
+
+    selection_arrow = Arrow(end=NormalHead(line_color="yellow", line_width=4),
+                    x_start=0, y_start=0, x_end='xsource', y_end='ysource', source=csource)
+
+    p2.add_layout(selection_arrow)
+
+    p.add_layout(selection_arrow)
+
+
+
+
+    def babai_callback(event):
+        coords=(round(event.x, 3), round(event.y, 3))
+        basis = np.array([bsource.data['x'], bsource.data['y']])
+        ubasis = np.array([bsource.data['xu'], bsource.data['yu']])
+        cvp = solve_babai(basis, coords)
+        ucvp = solve_babai(ubasis, coords)
+        csource.data = dict(xb=[cvp[0]], xub=[ucvp[0]], yb=[cvp[1]], yub=[ucvp[1]], xsource=[coords[0]], ysource=[coords[1]], independence=csource.data['independence'])
+
+
+    def x1_callback(attr, old, new):
+        try:
+            new = int(new)
+        except ValueError:
+            new = old
+
+        basis = bsource.data
+        basis['x'][0] = new
+        newbasis = np.array([basis['x'], basis['y']])
+        regenerate_lattice(newbasis)
+
+
+    def x2_callback(attr, old, new):
+        try:
+            new = int(new)
+        except ValueError:
+            new = old
+
+        basis = bsource.data
+        basis['x'][1] = new
+        newbasis = np.array([basis['x'], basis['y']])
+        regenerate_lattice(newbasis)
+
+    def y1_callback(attr, old, new):
+        try:
+            new = int(new)
+        except ValueError:
+            new = old
+
+        basis = bsource.data
+        basis['y'][0] = new
+        newbasis = np.array([basis['x'], basis['y']])
+        regenerate_lattice(newbasis)
+
+
+    def y2_callback(attr, old, new):
+        try:
+            new = int(new)
+        except ValueError:
+            new = old
+
+        basis = bsource.data
+        basis['y'][1] = new
+        newbasis = np.array([basis['x'], basis['y']])
+        regenerate_lattice(newbasis)
+
+
+    def unimod_callback(event):
+        basis = bsource.data
+        newbasis = np.matmul(np.array([basis['x'], basis['y']]),rand_unimod(2))
+        bsource.data = dict(x=bsource.data['x'], y=bsource.data['y'], xu=newbasis[0], yu=newbasis[1], hadamard=[bsource.data['hadamard'][0], hadamard_ratio(newbasis)])
+        hadamard2.text = f"""Hadamard Ratio: {bsource.data['hadamard'][1]}"""
+
+    #Defining the UI elements
+    x1 = Slider(title="X1", value=2, start=-10, end=10, step=1)
+    x2 = Slider(title="X2", value=1, start=-10, end=10, step=1)
+    y1 = Slider(title="Y1", value=1, start=-10, end=10, step=1)
+    y2 = Slider(title="Y2", value=2, start=-10, end=10, step=1)
+
+    x1_input = TextInput(value="2", title="X1:")
+    x1_input.on_change('value', x1_callback)
+    x2_input = TextInput(value="1", title="X2:")
+    x2_input.on_change('value', x1_callback)
+    y1_input = TextInput(value="1", title="Y1:")
+    y1_input.on_change('value', x1_callback)
+    y2_input = TextInput(value="2", title="Y2:")
+    y2_input.on_change('value', x1_callback)
+
+    x1.on_change('value', x1_callback)
+    y1.on_change('value', y1_callback)
+    x2.on_change('value', x2_callback)
+    y2.on_change('value', y2_callback)
+
+    independence = Div(text=f"""Basis vectors are {"not" if csource.data['independence'] == 1 else ""} independent.""", width=200, height=10)
+    hadamard = Div(text=f"""Hadamard Ratio: {bsource.data['hadamard'][0]}""", width=200, height=100)
+    hadamard2 = Div(text=f"""Hadamard Ratio: {bsource.data['hadamard'][1]}""", width=200, height=100)
+
+    button = Button(label="Apply Unimodular matrix", button_type="default")
+    button.on_click(unimod_callback)
+
+    p.add_tools(TapTool())
+    p.on_event(Tap, babai_callback)
+    
+    #Defining the layout 
+    buttons = column(x1, x1_input, y1, y1_input, x2, x2_input, y2, y2_input, button, independence, width=250)
+    baseplot = column(p, hadamard, width=400)
+    uniplot = column(p2, hadamard2, width=400)
+    doc.add_root(row(buttons, baseplot, uniplot))
+    doc.title = "Lattice-based Cryptography"
+
+
