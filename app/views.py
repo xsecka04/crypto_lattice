@@ -13,8 +13,15 @@ def babai_page():
 
 
 
-@app.route('/lwe', methods=['GET'])
+#@app.route('/lwe', methods=['GET'])
+#def lwe_page():
+#    #script = server_document(f'http://{ip}:50007/babai')
+#    script = server_document(f'http://localhost:50008/lwe')
+#    return render_template("index.html", script=script, template="Flask")
+
+
+@app.route('/alg', methods=['GET'])
 def lwe_page():
     #script = server_document(f'http://{ip}:50007/babai')
-    script = server_document(f'http://localhost:50008/lwe')
+    script = server_document(f'http://localhost:50010/alg')
     return render_template("index.html", script=script, template="Flask")

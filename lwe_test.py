@@ -3,9 +3,9 @@ import numpy as np
 import random
 import math
 
-n = 2
-m = 2
-q = 17
+n = 50
+m = 50
+q = 997
 
 message = 0
 

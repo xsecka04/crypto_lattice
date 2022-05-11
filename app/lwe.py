@@ -87,6 +87,8 @@ def lwe_app(doc):
 
     # Create data sources for lattice, bases and calculations
     source = ColumnDataSource(data=dict(x=x, y=y))
+    lwesource = ColumnDataSource(data=dict(x=basis[0], y=basis[1], xu=np.array([0, 0]), yu=np.array([0, 0]), hadamard=[hadamard_ratio(basis), 0]))
+
     bsource = ColumnDataSource(data=dict(x=basis[0], y=basis[1], xu=np.array([0, 0]), yu=np.array([0, 0]), hadamard=[hadamard_ratio(basis), 0]))
     csource = ColumnDataSource(data=dict(xb=[0], xub=[0], yb=[0], yub=[0], xsource=[0], ysource=[0], independence=[1]))
     # Define lattice plot
