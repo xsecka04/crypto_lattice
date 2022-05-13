@@ -1,5 +1,6 @@
+import json
 from bokeh.embed import server_document
-from flask import render_template
+from flask import jsonify, render_template
 from . import app
 import os
 
@@ -21,7 +22,17 @@ def babai_page():
 
 
 @app.route('/alg', methods=['GET'])
-def lwe_page():
+def alg_page():
     #script = server_document(f'http://{ip}:50007/babai')
-    script = server_document(f'http://localhost:50010/alg')
-    return render_template("index.html", script=script, template="Flask")
+    script = server_document(f'http://localhost:50007/alg')
+    return render_template("alg.html", script=script, template="Flask")
+
+
+@app.route('/lwe_basis', methods=['GET'])
+def lwe_basis_page():
+    #script = server_document(f'http://{ip}:50007/babai')
+    script = server_document(f'http://localhost:50007/lwe_basis')
+    return render_template("lwe.html", script=script, template="Flask")
+
+
+

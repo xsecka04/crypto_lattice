@@ -40,17 +40,17 @@ def alg_app(doc):
 
         ep = (pp - np.dot(ap, s)) % q
 
-        print(f'Range ({(q//2-q//4)}, {(q//2+(q//4))})')
+        #print(f'Range ({(q//2-q//4)}, {(q//2+(q//4))})')
         decrypted = 1 if (q//2-(q//4)) < ep < (q//2+(q//4)) else 0
 
-        return A,s,e,B,decrypted,ep
+        return A,s,e,B,decrypted,ep, ap, pp
     
-    A,s,e,B,decrypted,ep = calculate_lwe(n,m,q,message)
+    A,s,e,B,decrypted,ep, ap, pp = calculate_lwe(n,m,q,message)
 
 
-    source = ColumnDataSource(data=dict(n=[n], m=[m], q=[q], msg=[message], dec=[decrypted], ciph=[ep]))
+    source = ColumnDataSource(data=dict(n=[n], m=[m], q=[q], msg=[message], dec=[decrypted], ciph=[ep], pp=[pp]))
     bsource = ColumnDataSource(data=dict(A=A, B=B))
-    csource = ColumnDataSource(data=dict(s=s))
+    csource = ColumnDataSource(data=dict(s=s, ap=ap))
     dsource = ColumnDataSource(data=dict(e=e))
 
     def lwe_callback(event):
@@ -72,16 +72,21 @@ def alg_app(doc):
             q = 17
 
 
-        A,s,e,B,decrypted,ep = calculate_lwe(n,m,q,message)
-        source.data = dict(n=[n], m=[m], q=[q], msg=[message], dec=[decrypted],ciph=[ep])
+        A,s,e,B,decrypted,ep, ap, pp = calculate_lwe(n,m,q,message)
+        source.data = dict(n=[n], m=[m], q=[q], msg=[message], dec=[decrypted],ciph=[ep], pp=[pp])
         bsource.data = dict(A=A, B=B)
-        csource.data = dict(s=s)
+        csource.data = dict(s=s, ap=ap)
         dsource.data = dict(e=e)
-        public.text = f"""Public key: ({bsource.data['A']}, {bsource.data['B']})"""
         out.text = f"""Plaintext: {source.data['msg'][0]}, Ciphertext: {source.data['dec'][0]} ({source.data['ciph'][0]})"""
         private.text = f"Private key: $$s={pmatrix(csource.data['s'])}$$, $$e={pmatrix(dsource.data['e'])}$$"
         public.text = f"Public key: $$A={pmatrix(bsource.data['A'])}$$, $$p={pmatrix(bsource.data['B'])}$$"
-        equation.text = f"""$${pmatrix(bsource.data['A'])} {pmatrix(csource.data['s'])}^\\top  + {pmatrix(dsource.data['e'])}^\\top  = {pmatrix(bsource.data['B'])}^\\top (\\bmod {source.data['q']})$$"""
+        equation.text = f"""$${pmatrix(bsource.data['A'])} {pmatrix(csource.data['s'])}^\\top + $$ <br> $$+ {pmatrix(dsource.data['e'])}^\\top  = {pmatrix(bsource.data['B'])}^\\top (\\bmod {source.data['q'][0]})$$"""
+        enc_pair.text=r"$$a' = \sum_I " + f"{pmatrix(bsource.data['A'])} = {pmatrix(csource.data['ap'])}$$"
+        enc_pair2.text=r"$$p' = " + r"\sum_I " + f"{pmatrix(bsource.data['B'])} + {source.data['msg'][0]} " + r"*\lfloor \frac{" + f"{source.data['q'][0]}" +r"}{2} \rfloor = " + f"{source.data['pp'][0]}$$"
+        dec_pair.text=f"$$ {source.data['pp'][0]} - {pmatrix(csource.data['ap'])} \\times {pmatrix(csource.data['s'])}^\\top = {source.data['ciph'][0]} $$"
+        dec_pair2.text=f"$$ Dec({source.data['ciph'][0]})=" + r"\begin{cases} 0, & \text{if } x \sim 0 \\ 1, & \text{if } x \sim " + f"{source.data['q'][0]}/2" + r"\end{cases}" + f" = {source.data['dec'][0]}$$"
+
+
 
 
 
@@ -90,7 +95,8 @@ def alg_app(doc):
 
     out = Div(text=f"""Plaintext: {source.data['msg'][0]}, Ciphertext: {source.data['dec'][0]} ({source.data['ciph'][0]})""", width=200, height=200)
 
-    equation = Div(text=f"""$${pmatrix(bsource.data['A'])} {pmatrix(csource.data['s'])}^\\top + {pmatrix(dsource.data['e'])}^\\top = {pmatrix(bsource.data['B'])}^\\top (\\bmod {source.data['q'][0]})$$""", width=500, height=300)
+    equation = Div(text=f"""$${pmatrix(bsource.data['A'])} {pmatrix(csource.data['s'])}^\\top + $$ <br> $$+ {pmatrix(dsource.data['e'])}^\\top = {pmatrix(bsource.data['B'])}^\\top (\\bmod {source.data['q'][0]})$$""", 
+    width=300, height=200, style={'font-size': '100%'})
 
 
     button = Button(label="Recalculate keys", button_type="default")
@@ -104,9 +110,40 @@ def alg_app(doc):
    # message_input.on_change('value', lwe_callback)
 
 
+    prelimA = Div(text=f"Alice", width=300, height=50)
+    prelimB = Div(text=f"Bob", width=300, height=50)
+    prelimC = Div(text=f"Network", width=300, height=50)
+    send = Div(text=f"Alice sends (pub)", width=300, height=200)
+    send2 = Div(text=f"Bob sends (ap, pp)", width=300, height=200)
+    space = Div(text=f"", width=300, height=200)
+
+    #enc_pair = Div(text=f"""$$({pmatrix(csource.data['ap'])}, {source.data['pp']})$$""", width=300, height=200)
+    enc_pair = Div(text=r"$$a' = \sum_I " + f"{pmatrix(bsource.data['A'])} = {pmatrix(csource.data['ap'])}$$", width=300, height=150)
+    enc_pair2 = Div(text=r"$$p' = " + r"\sum_I " + f"{pmatrix(bsource.data['B'])} + {source.data['msg'][0]} " + r"*\lfloor \frac{" + f"{source.data['q'][0]}" +r"}{2} \rfloor = " + f"{source.data['pp'][0]}$$", width=300, height=50)
+
+    dec_pair = Div(text=f"$$ {source.data['pp'][0]} - {pmatrix(csource.data['ap'])} \\times {pmatrix(csource.data['s'])}^\\top = {source.data['ciph'][0]} $$", width=300, height=50)
+    dec_pair2 = Div(text=f"$$ Dec({source.data['ciph'][0]})=" + r"\begin{cases} 0, & \text{if } x \sim 0 \\ 1, & \text{if } x \sim " + f"{source.data['q'][0]}/2" + r"\end{cases}" + f" = {source.data['dec'][0]}$$", width=300, height=50)
+
+    #f"$$ Dec({source.data['ciph']})" + r"\begin{cases} 0, & \text{if } x ~ 0 \\ 1, & \text{if } x ~ q/2 \end{cases}" + f" = {source.data['dec']}$$"
+
+
+    prelim = row(prelimA, prelimC, prelimB)
+    keygen = row(equation, send, space)
+    encryption = row(space, send2, column(enc_pair,enc_pair2))
+    decryption = row(column(dec_pair, dec_pair2))
+
+
+    #alice = column(prelimA, equation)
+    #btw = column(prelimC, send, space)
+    #bob = column(prelimB, decryption)
+
+    protocol = column(prelim, keygen, encryption, decryption)
+
 
     #buttons = column(button, width=250)
     inputs = column(n_input, m_input, q_input, message_input, button)
     outputs = column(private,public, out, equation)
-    doc.add_root(row(inputs, outputs))
+    #doc.add_root(row(inputs, outputs))
+    doc.add_root(row(inputs, protocol))
+
     doc.title = "LWE algorithm"

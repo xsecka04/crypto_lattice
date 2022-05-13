@@ -9,7 +9,7 @@ from sympy import *
 
 
 
-def lwe_app(doc):
+def lwe_app2(doc):
     def generate_lattice(basis):
         xval = []
         yval = []

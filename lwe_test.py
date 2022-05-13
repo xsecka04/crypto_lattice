@@ -3,15 +3,16 @@ import numpy as np
 import random
 import math
 
-n = 50
-m = 50
-q = 997
+n = 4
+m = 3
+q = 17
 
 message = 0
 
 #A = np.array([[5,3,-1],[6,1,-13],[1,-11,1],[-7,4,0]])
 #s = np.array([2,3,-2])
 #e = np.array([1,-1,0,1])
+
 
 
 A = np.random.randint(low=-q,high=q,size=(m,n))
@@ -40,7 +41,3 @@ print(f'Decrypted message from {ep} is {decrypted}')
 
 
 ####################################################
-
-
-
-
