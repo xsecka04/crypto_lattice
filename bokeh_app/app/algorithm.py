@@ -22,11 +22,12 @@ def alg_app(doc):
         return '\n'.join(rv)
 
     n = 3
-    m = 4
+    #m = 4
     q = 17
     message = 0
 
-    def calculate_lwe(n,m,q,message):
+    def calculate_lwe(n,q,message):
+        m = int(np.ceil(1.1 * np.log(q) * n))
         A = np.random.randint(low=-q,high=q,size=(m,n))
         s = np.random.randint(low=-q,high=q,size=n)
         e = np.random.randint(-1,1,size=m)
@@ -43,9 +44,9 @@ def alg_app(doc):
         #print(f'Range ({(q//2-q//4)}, {(q//2+(q//4))})')
         decrypted = 1 if (q//2-(q//4)) < ep < (q//2+(q//4)) else 0
 
-        return A,s,e,B,decrypted,ep, ap, pp
+        return A,s,e,B,decrypted,ep, ap, pp, m
     
-    A,s,e,B,decrypted,ep, ap, pp = calculate_lwe(n,m,q,message)
+    A,s,e,B,decrypted,ep, ap, pp, m = calculate_lwe(n,q,message)
 
 
     source = ColumnDataSource(data=dict(n=[n], m=[m], q=[q], msg=[message], dec=[decrypted], ciph=[ep], pp=[pp]))
@@ -62,17 +63,17 @@ def alg_app(doc):
             n = int(n_input.value)
         except ValueError:
             n = 3
-        try:
-            m = int(m_input.value)
-        except ValueError:
-            m = 4
+        #try:
+        #    m = int(m_input.value)
+        #except ValueError:
+        #    m = 4
         try:
             q = int(q_input.value)
         except ValueError:
             q = 17
 
 
-        A,s,e,B,decrypted,ep, ap, pp = calculate_lwe(n,m,q,message)
+        A,s,e,B,decrypted,ep, ap, pp, m = calculate_lwe(n,q,message)
         source.data = dict(n=[n], m=[m], q=[q], msg=[message], dec=[decrypted],ciph=[ep], pp=[pp])
         bsource.data = dict(A=A, B=B)
         csource.data = dict(s=s, ap=ap)
@@ -141,7 +142,9 @@ def alg_app(doc):
 
 
     #buttons = column(button, width=250)
-    inputs = column(n_input, m_input, q_input, message_input, button)
+    #inputs = column(n_input, m_input, q_input, message_input, button)
+    inputs = column(n_input, q_input, message_input, button)
+
     outputs = column(private,public, out, equation)
     #doc.add_root(row(inputs, outputs))
     doc.add_root(row(inputs, protocol))
