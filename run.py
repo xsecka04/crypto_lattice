@@ -33,6 +33,6 @@ Thread(target=app_worker).start()
 
 
 if __name__ == "__main__":
-    #from waitress import serve #use this in production environment
-    #serve(app, host="0.0.0.0", port=50000)
-    app.run(debug=True, host="localhost", port=80) #use this in dev environment
+    from waitress import serve #use this in production environment
+    serve(app, host="0.0.0.0", port=80)
+    #app.run(debug=True, host="localhost", port=80) #use this in dev environment
