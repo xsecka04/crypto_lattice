@@ -79,7 +79,11 @@ def lwe_basis_app(doc):
     bsource = ColumnDataSource(data=dict(x=basis[0], y=basis[1]))
     csource = ColumnDataSource(data=dict(pubx=[pubx], puby=[puby], secx=[secx], secy=[secy], epx=[epx], epy=[epy]))
 
-    
+    dsource = ColumnDataSource(data=dict(A=A, B=B))
+    esource = ColumnDataSource(data=dict(s=s))
+    fsource = ColumnDataSource(data=dict(e=e))
+
+
 
     p = figure(
         title="LWE on lattice",
@@ -119,14 +123,7 @@ def lwe_basis_app(doc):
 
 
     def lwe_callback(event):
-        try:
-            q = int(q_input.value)
-        except ValueError:
-            q = 17
-
-        message = bit.active
-
-        A,s,e,B,decrypted,ep = calculate_lwe(2,2,q,message)
+        A,s,e,B,decrypted,ep = calculate_lwe(2,2,17,message)
 
         basis = np.transpose(A)
         x,y = generate_lattice(basis)
@@ -134,56 +131,62 @@ def lwe_basis_app(doc):
         secx=s[0]*basis[0][0] + s[1]*basis[0][1]
         secy=s[0]*basis[1][0] + s[1]*basis[1][1]
 
-        epx=np.sin((2*np.pi/q)*ep)
-        epy=np.cos((2*np.pi/q)*ep)
+        epx=np.sin((2*np.pi/17)*ep)
+        epy=np.cos((2*np.pi/17)*ep)
 
         pubx=s[0]*basis[0][0] + s[1]*basis[0][1] + e[0]
         puby=s[0]*basis[1][0] + s[1]*basis[1][1] + e[1]
 
+
+        dsource.data = dict(A=A, B=B)
+        esource.data = dict(s=s)
+        fsource.data = dict(e=e)
+
+        equation.text= f"""$${pmatrix(dsource.data['A'])} {pmatrix(esource.data['s'])}^\\top + {pmatrix(fsource.data['e'])}^\\top = {pmatrix(dsource.data['B'])}^\\top (\\bmod 17)$$"""
 
         source.data = dict(x=x, y=y)
         bsource.data = dict(x=basis[0], y=basis[1])
         csource.data = dict(pubx=[pubx], puby=[puby], secx=[secx], secy=[secy], epx=[epx], epy=[epy])
 
         private.text = f"Private key: $$s={pmatrix(s)}$$, $$e={pmatrix(e)}$$"
-        public.text = f"Public key: $$A={pmatrix(A)}$$, $$p={pmatrix(B)}$$"
+        public.text = f"Public key: $$A={pmatrix(A)}$$, $$B={pmatrix(B)}$$"
 
-    def lwe_callback2(attr, old, new):
-        try:
-            q = int(q_input.value)
-        except ValueError:
-            q = 17
+    #def lwe_callback2(attr, old, new):
+    #    try:
+    #        q = int(q_input.value)
+    #    except ValueError:
+    #        q = 17
 
-        message = bit.active
+    #    message = bit.active
 
-        A,s,e,B,decrypted,ep = calculate_lwe(2,2,q,message)
+    #    A,s,e,B,decrypted,ep = calculate_lwe(2,2,q,message)
 
-        basis = np.transpose(A)
-        x,y = generate_lattice(basis)
+    #    basis = np.transpose(A)
+    #    x,y = generate_lattice(basis)
 
-        secx=s[0]*basis[0][0] + s[1]*basis[0][1]
-        secy=s[0]*basis[1][0] + s[1]*basis[1][1]
+    #    secx=s[0]*basis[0][0] + s[1]*basis[0][1]
+    #    secy=s[0]*basis[1][0] + s[1]*basis[1][1]
 
-        epx=np.sin((2*np.pi/q)*ep)
-        epy=np.cos((2*np.pi/q)*ep)
+    #    epx=np.sin((2*np.pi/q)*ep)
+    #    epy=np.cos((2*np.pi/q)*ep)
 
-        pubx=s[0]*basis[0][0] + s[1]*basis[0][1] + e[0]
-        puby=s[0]*basis[1][0] + s[1]*basis[1][1] + e[1]
-
-
-        source.data = dict(x=x, y=y)
-        bsource.data = dict(x=basis[0], y=basis[1])
-        csource.data = dict(pubx=[pubx], puby=[puby], secx=[secx], secy=[secy], epx=[epx], epy=[epy])
-
-        private.text = f"Private key: $$s={pmatrix(s)}$$, $$e={pmatrix(e)}$$"
-        public.text = f"Public key: $$A={pmatrix(A)}$$, $$p={pmatrix(B)}$$"
+    #    pubx=s[0]*basis[0][0] + s[1]*basis[0][1] + e[0]
+    #    puby=s[0]*basis[1][0] + s[1]*basis[1][1] + e[1]
 
 
+    #    source.data = dict(x=x, y=y)
+    #    bsource.data = dict(x=basis[0], y=basis[1])
+    #    csource.data = dict(pubx=[pubx], puby=[puby], secx=[secx], secy=[secy], epx=[epx], epy=[epy])
+
+    #    private.text = f"Private key: $$s={pmatrix(s)}$$, $$e={pmatrix(e)}$$"
+    #   public.text = f"Public key: $$A={pmatrix(A)}$$, $$p={pmatrix(B)}$$"
 
 
-    q_input = TextInput(value="17", title="Prime number:")
-    bit = RadioButtonGroup(labels=["0","1"], active=0)
-    bit.on_change('active', lwe_callback2)
+
+
+    #q_input = TextInput(value="17", title="Prime number:")
+    #bit = RadioButtonGroup(labels=["0","1"], active=0)
+    #bit.on_change('active', lwe_callback2)
 
 
     button = Button(label="Recalculate keys", button_type="default")
@@ -191,12 +194,14 @@ def lwe_basis_app(doc):
 
 
     private = Div(text=f"Private key: $$s={pmatrix(s)}$$, $$e={pmatrix(e)}$$", width=200, height=100)
-    public = Div(text=f"Public key: $$A={pmatrix(A)}$$, $$p={pmatrix(B)}$$", width=200, height=100)
+    public = Div(text=f"Public key: $$A={pmatrix(A)}$$, $$B={pmatrix(B)}$$", width=200, height=100)
+
+    equation = Div(text=f"""$${pmatrix(dsource.data['A'])} {pmatrix(esource.data['s'])}^\\top + {pmatrix(fsource.data['e'])}^\\top = {pmatrix(dsource.data['B'])}^\\top (\\bmod 17)$$""", 
+    width=300, height=200, style={'font-size': '100%', 'margin-top': '170px'})
 
 
 
+    controls = column(button, private, public)
 
-    controls = column(button, q_input, bit, private, public)
-
-    doc.add_root(row(controls, p,p2))
+    doc.add_root(row(controls, p, equation))
     doc.title = "LWE on Basis"
