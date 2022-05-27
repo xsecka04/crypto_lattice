@@ -6,7 +6,7 @@ from bokeh.events import Tap
 
 import random
 import numpy as np
-from sympy import *
+#from sympy import *
 from os.path import dirname, join
 
 class NumpyArrayEncoder(json.JSONEncoder):

@@ -5,7 +5,7 @@ from bokeh.events import Tap
 
 import random
 import numpy as np
-from sympy import *
+#from sympy import *
 
 
 
