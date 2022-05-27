@@ -6,7 +6,6 @@ from bokeh.events import Tap
 
 import random
 import numpy as np
-#from sympy import *
 from os.path import dirname, join
 
 class NumpyArrayEncoder(json.JSONEncoder):
@@ -127,10 +126,8 @@ def alg_app(doc):
         csource.data = dict(s=s, ap=ap)
         dsource.data = dict(e=e)
 
-        #out.text = f"""Plaintext: {source.data['msg'][0]}, Ciphertext: {source.data['dec'][0]} ({source.data['ciph'][0]})"""
         private.text = f"Private key: $$s={pmatrix(csource.data['s'])}$$, $$e={pmatrix(dsource.data['e'])}$$"
         public.text = f"Public key: $$A={pmatrix(bsource.data['A'])}$$, $$p={pmatrix(bsource.data['B'])}$$"
-        #equation.text = f"""$${pmatrix(bsource.data['A'])} {pmatrix(csource.data['s'])}^\\top + $$ <br> $$+ {pmatrix(dsource.data['e'])}^\\top  = {pmatrix(bsource.data['B'])}^\\top (\\bmod {source.data['q'][0]})$$"""
         enc_pair.text=r"$$a' = \sum_I " + f"{pmatrix(bsource.data['A'])} = {pmatrix(csource.data['ap'])}$$"
         enc_pair2.text=r"$$p' = " + r"\sum_I " + f"{pmatrix(bsource.data['B'])} + {source.data['msg'][0]} " + r"*\lfloor \frac{" + f"{source.data['q'][0]}" +r"}{2} \rfloor = " + f"{source.data['pp'][0]}$$"
         dec_pair.text=f"$$ {source.data['pp'][0]} - {pmatrix(csource.data['ap'])} \\times {pmatrix(csource.data['s'])}^\\top = {source.data['ciph'][0]} $$"
@@ -159,7 +156,6 @@ def alg_app(doc):
 
         private.text = f"Private key: $$s={pmatrix(csource.data['s'])}$$ $$e={pmatrix(dsource.data['e'])}$$"
         public.text = f"Public key: $$A={pmatrix(bsource.data['A'])}$$ $$p={pmatrix(bsource.data['B'])}$$"
-        #equation.text = f"""$${pmatrix(bsource.data['A'])} {pmatrix(csource.data['s'])}^\\top + $$ <br> $$+ {pmatrix(dsource.data['e'])}^\\top  = {pmatrix(bsource.data['B'])}^\\top (\\bmod {source.data['q'][0]})$$"""
 
     def lwe_enc_callback(event):
 
@@ -197,11 +193,6 @@ def alg_app(doc):
     private = Div(text=f"""Private key: $$s={pmatrix(csource.data['s'])}$$ $$e={pmatrix(dsource.data['e'])}$$""", width=200, height=50)
     public = Div(text=f"""Public key: $$A={pmatrix(bsource.data['A'])}$$ $$p={pmatrix(bsource.data['B'])}$$""", width=200, height=200)
 
-    #out = Div(text=f"""Plaintext: {source.data['msg'][0]}, Ciphertext: {source.data['dec'][0]} ({source.data['ciph'][0]})""", width=200, height=200)
-
-    #equation = Div(text=f"""$${pmatrix(bsource.data['A'])} {pmatrix(csource.data['s'])}^\\top + $$ <br> $$+ {pmatrix(dsource.data['e'])}^\\top = {pmatrix(bsource.data['B'])}^\\top (\\bmod {source.data['q'][0]})$$""", 
-    #width=300, height=200, style={'font-size': '100%'})
-
     button = Button(label="Recalculate keys", button_type="default")
     button.on_click(lwe_callback)
 
@@ -222,9 +213,6 @@ def alg_app(doc):
                             code=open(join(dirname(__file__), "download.js")).read()))
 
 
-    #breakdiv = Div(text="<hr>", width=300, height=30)
-    #breakdiv2 = Div(text="<hr>", width=300, height=30)
-
     key = Div(text="Key Generator", width=300, height=30)
     key_button = Button(label="Generate keys", button_type="success")
     key_button.on_click(lwe_keygen_callback)
@@ -241,9 +229,8 @@ def alg_app(doc):
     dec_row = row(column(dec, dec_button, download_button), column(dec_pair,dec_pair2), p2)
 
 
-   # protocol = column(keygen_row, breakdiv, enc_row,breakdiv2, dec_row)
     protocol = column(keygen_row, enc_row, dec_row)
 
     doc.add_root(protocol)
 
-    doc.title = "LWE algorithm"
+    doc.title = "LWE protocol"

@@ -27,23 +27,25 @@
         
             <main class="px-3">
             <h1>Learning with errors</h1>
-            <p class="lead">At it's core it's just a simple linear algebra. Try it out for yourself!</p>
-            <div class="alert alert-primary" role="alert">
-            This tool will help you to visualize the math behind the cryptosystem
-            </div>
+            <p class="lead">Here you can see the similarities between LWE and CVP</p>
 
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">How to use the Babai's algorithm module</h5>
+                    <h5 class="card-title">How to use the CVP/LWE module</h5>
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item">Choose your basis vectors either by scrolling the slider or directly typing them</li>
-                        <li class="list-group-item">Then click on "Apply Unimodular matrix" to scramble your input vectors into a public key</li>
-                        <li class="list-group-item">Now select Tap tool icon
-                            <img src="static/tap.png">
-                             and click anywhere in the first graph to see the calculations of Babai's algorithm on both bases. You can see why the Unimodular scrambling is so powerful!</li>
+                        <li class="list-group-item">Click on Recalculate keys and look at the plot where you will see the parameters with error.</li>
+                        <li class="list-group-item">On the left you can see the LWE equation.</li>
                       </ul>
                 </div>
               </div>
+              <div class="alert alert-info" role="alert">
+                Note that we have limited the modulus to be a small prime, such that the plot won't be too large.
+                </div>
+              <div class="alert alert-warning" role="alert">
+                Sometimes the parameters will not be sufficiently large to see the error, hence why the algorithms are performed in many dimensions.
+              </div>
+  
+    
         </main>
 
         <div class="justify-content-center container">

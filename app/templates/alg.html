@@ -26,24 +26,34 @@
           </header>
         
             <main class="px-3">
-            <h1>Simple LWE algorithm</h1>
-            <p class="lead">At it's core it's just a simple linear algebra. Try it out for yourself!</p>
-            <div class="alert alert-primary" role="alert">
-            This tool will help you to visualize the math behind the cryptosystem
-            </div>
+            <h1>LWE bit encryption protocol</h1>
+
+            <p class="lead">Try the simple protocol based on Learning with errors</p>
+
 
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">How to use the Babai's algorithm module</h5>
+                    <h5 class="card-title">How to use the LWE bit encryption protocol module</h5>
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item">Choose your basis vectors either by scrolling the slider or directly typing them</li>
-                        <li class="list-group-item">Then click on "Apply Unimodular matrix" to scramble your input vectors into a public key</li>
-                        <li class="list-group-item">Now select Tap tool icon
-                            <img src="static/tap.png">
-                             and click anywhere in the first graph to see the calculations of Babai's algorithm on both bases. You can see why the Unimodular scrambling is so powerful!</li>
+                        <li class="list-group-item">Select the matrix dimension, number of rows will be chosen by a recommended rule.</li>
+                        <li class="list-group-item">Chose a proper prime modulus, recommendation is between n^2 and 2n^2, or just experiment.</li>
+                        <li class="list-group-item">Then click on Generate parameters to obtain the key pair used in the encryption.</li>
+                        <li class="list-group-item">Now you can select which bit you want to encrypt, and then click on Encrypt the message.</li>
+                        <li class="list-group-item">You can see how the encryption is being calculated on the left of the controls.</li>
+                        <li class="list-group-item">After you have encrypted the message, you can try to decrypt it using the Decrypt the message button.</li>
+                        <li class="list-group-item">You can see under what condition is the message decrypted.</li>
+                        <li class="list-group-item">You can also observe how close the message is to the decryption point, which is "1" in the uppermost point and "0" in the lowermost point on the unit circle.</li>
                       </ul>
                 </div>
               </div>
+              <div class="alert alert-success" role="alert">
+                If you want to see the whole matrices, click on download to obtain the parameters in JSON format!
+                </div>
+                <div class="alert alert-warning" role="alert">
+                Note that decrypting a wrong bit is mainly caused due to not selecting large enough dimension, or small prime.
+                </div>
+  
+    
         </main>
 
         <div class="justify-content-center container">
@@ -51,7 +61,7 @@
         </div>
 
         <footer class="mt-auto text-black-50">
-            <p>Martin Seckar, Semestral thesis, 2021 </p>
+            <p>Martin Seckar, Bachelor's thesis, 2022 </p>
           </footer>
         
       </div>

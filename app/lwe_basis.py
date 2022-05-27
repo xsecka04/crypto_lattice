@@ -1,11 +1,8 @@
 from bokeh.models import ColumnDataSource, Div, Slider, TextInput, Range1d, Arrow, OpenHead, NormalHead, TapTool, Button, RadioButtonGroup
 from bokeh.layouts import row, column
 from bokeh.plotting import figure
-from bokeh.events import Tap
 
-import random
 import numpy as np
-#from sympy import *
 
 
 def lwe_basis_app(doc):
@@ -151,43 +148,6 @@ def lwe_basis_app(doc):
         private.text = f"Private key: $$s={pmatrix(s)}$$, $$e={pmatrix(e)}$$"
         public.text = f"Public key: $$A={pmatrix(A)}$$, $$B={pmatrix(B)}$$"
 
-    #def lwe_callback2(attr, old, new):
-    #    try:
-    #        q = int(q_input.value)
-    #    except ValueError:
-    #        q = 17
-
-    #    message = bit.active
-
-    #    A,s,e,B,decrypted,ep = calculate_lwe(2,2,q,message)
-
-    #    basis = np.transpose(A)
-    #    x,y = generate_lattice(basis)
-
-    #    secx=s[0]*basis[0][0] + s[1]*basis[0][1]
-    #    secy=s[0]*basis[1][0] + s[1]*basis[1][1]
-
-    #    epx=np.sin((2*np.pi/q)*ep)
-    #    epy=np.cos((2*np.pi/q)*ep)
-
-    #    pubx=s[0]*basis[0][0] + s[1]*basis[0][1] + e[0]
-    #    puby=s[0]*basis[1][0] + s[1]*basis[1][1] + e[1]
-
-
-    #    source.data = dict(x=x, y=y)
-    #    bsource.data = dict(x=basis[0], y=basis[1])
-    #    csource.data = dict(pubx=[pubx], puby=[puby], secx=[secx], secy=[secy], epx=[epx], epy=[epy])
-
-    #    private.text = f"Private key: $$s={pmatrix(s)}$$, $$e={pmatrix(e)}$$"
-    #   public.text = f"Public key: $$A={pmatrix(A)}$$, $$p={pmatrix(B)}$$"
-
-
-
-
-    #q_input = TextInput(value="17", title="Prime number:")
-    #bit = RadioButtonGroup(labels=["0","1"], active=0)
-    #bit.on_change('active', lwe_callback2)
-
 
     button = Button(label="Recalculate keys", button_type="default")
     button.on_click(lwe_callback)
@@ -204,4 +164,4 @@ def lwe_basis_app(doc):
     controls = column(button, private, public)
 
     doc.add_root(row(controls, p, equation))
-    doc.title = "LWE on Basis"
+    doc.title = "LWE on Lattices"
