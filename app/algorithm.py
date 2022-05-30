@@ -44,7 +44,7 @@ def alg_app(doc):
     
     #Parameters calc
     def calculate_lwe_params(n,q):
-        m = int(np.ceil(2 * np.log(q) * n))
+        m = int(np.ceil(1.1 * np.log(q) * n))
         A = np.random.randint(low=-q,high=q,size=(m,n))
         s = np.random.randint(low=-q,high=q,size=n)
         e = np.random.randint(-1,1,size=m)
