@@ -1,10 +1,8 @@
 import json
-from bokeh.models import ColumnDataSource, Div, Slider, TextInput, Range1d, Arrow, OpenHead, NormalHead, TapTool, Button, CustomJS, RadioButtonGroup
+from bokeh.models import ColumnDataSource, Div, TextInput, Range1d, Button, CustomJS, RadioButtonGroup
 from bokeh.layouts import row, column
 from bokeh.plotting import figure
-from bokeh.events import Tap
 
-import random
 import numpy as np
 from os.path import dirname, join
 
@@ -19,7 +17,7 @@ def alg_app(doc):
 
     np.set_printoptions(threshold=20)
 
-    def lwe_to_json(A, s, e, B, ap, pp ,ep ,dec):
+    def lwe_to_json(A, s, e, B, ap, pp ,ep ,dec, q):
         ret = {"A": A,
                 "s": s,
                 "e": e,
@@ -27,7 +25,8 @@ def alg_app(doc):
                 "ap": ap,
                 "pp": int(pp),
                 "ep": int(ep),
-                "dec": int(dec)}
+                "dec": int(dec),
+                "q": int(q)}
 
         enc = json.dumps(ret, cls=NumpyArrayEncoder)
         return enc
@@ -46,7 +45,7 @@ def alg_app(doc):
     message = 0
 
     def calculate_lwe_params(n,q):
-        m = int(np.ceil(1.1 * np.log(q) * n))
+        m = int(np.ceil(2 * np.log(q) * n))
         A = np.random.randint(low=-q,high=q,size=(m,n))
         s = np.random.randint(low=-q,high=q,size=n)
         e = np.random.randint(-1,1,size=m)
@@ -138,10 +137,14 @@ def alg_app(doc):
 
         try:
             n = int(n_input.value)
+            if n > 1000:
+                raise ValueError
         except ValueError:
             n = 3
         try:
             q = int(q_input.value)
+            if q > 100000:
+                raise ValueError
         except ValueError:
             q = 17
 
@@ -154,8 +157,8 @@ def alg_app(doc):
         csource.data['s'] = s
         dsource.data = dict(e=e)
 
-        private.text = f"Private key: $$s={pmatrix(csource.data['s'])}$$ $$e={pmatrix(dsource.data['e'])}$$"
-        public.text = f"Public key: $$A={pmatrix(bsource.data['A'])}$$ $$p={pmatrix(bsource.data['B'])}$$"
+        private.text = f"Private key: $$s={pmatrix(csource.data['s'])}^\\top$$ $$e={pmatrix(dsource.data['e'])}^\\top$$"
+        public.text = f"Public key: $$A={pmatrix(bsource.data['A'])}$$ $$p={pmatrix(bsource.data['B'])}^\\top$$"
 
     def lwe_enc_callback(event):
 
@@ -177,7 +180,7 @@ def alg_app(doc):
         source.data['ciph'] = [ep]
         source.data['dec'] = [decrypted]
 
-        dec_pair.text=f"$$ {source.data['pp'][0]} - {pmatrix(csource.data['ap'])} $$ <br> $$\\times {pmatrix(csource.data['s'])}^\\top = {source.data['ciph'][0]} $$"
+        dec_pair.text=f"$$ e' = {source.data['pp'][0]} - {pmatrix(csource.data['ap'])} $$ <br> $$\\times {pmatrix(csource.data['s'])}^\\top = {source.data['ciph'][0]} $$"
         dec_pair2.text=f"$$ Dec({source.data['ciph'][0]})=" + r"\begin{cases} 0, & \text{if } x \sim 0 \\ 1, & \text{if } x \sim " + f"{source.data['q'][0]}/2" + r"\end{cases}" + f" = {source.data['dec'][0]}$$"
 
         ep = int(source.data['ciph'][0])
@@ -186,12 +189,14 @@ def alg_app(doc):
         epy=np.cos((2*np.pi/q)*ep)
         esource.data=dict(epx=[epx], epy=[epy])
 
+        ret.text = lwe_to_json(bsource.data['A'], csource.data['s'], dsource.data['e'], bsource.data['B'], csource.data['ap'], source.data['pp'][0] ,source.data['ciph'][0] ,source.data['dec'][0], source.data['q'][0])
 
 
 
+    ret = Div(text=lwe_to_json(bsource.data['A'], csource.data['s'], dsource.data['e'], bsource.data['B'], csource.data['ap'], source.data['pp'][0] ,source.data['ciph'][0] ,source.data['dec'][0], source.data['q'][0]))
 
-    private = Div(text=f"""Private key: $$s={pmatrix(csource.data['s'])}$$ $$e={pmatrix(dsource.data['e'])}$$""", width=200, height=50)
-    public = Div(text=f"""Public key: $$A={pmatrix(bsource.data['A'])}$$ $$p={pmatrix(bsource.data['B'])}$$""", width=200, height=200)
+    private = Div(text=f"""Private key: $$s={pmatrix(csource.data['s'])}^\\top$$ $$e={pmatrix(dsource.data['e'])}^\\top$$""", width=200, height=50)
+    public = Div(text=f"""Public key: $$A={pmatrix(bsource.data['A'])}$$ $$p={pmatrix(bsource.data['B'])}^\\top$$""", width=200, height=200)
 
     button = Button(label="Recalculate keys", button_type="default")
     button.on_click(lwe_callback)
@@ -204,12 +209,12 @@ def alg_app(doc):
     enc_pair = Div(text=r"$$a' = \sum_I " + f"{pmatrix(bsource.data['A'])} = {pmatrix(csource.data['ap'])}$$", width=300, height=150)
     enc_pair2 = Div(text=r"$$p' = " + r"\sum_I " + f"{pmatrix(bsource.data['B'])} + {source.data['msg'][0]} " + r"*\lfloor \frac{" + f"{source.data['q'][0]}" +r"}{2} \rfloor = " + f"{source.data['pp'][0]}$$", width=300, height=50)
 
-    dec_pair = Div(text=f"$$ {source.data['pp'][0]} - {pmatrix(csource.data['ap'])} $$ <br> $$ \\times {pmatrix(csource.data['s'])}^\\top = {source.data['ciph'][0]} $$", width=750, height=50)
+    dec_pair = Div(text=f"$$ e' = {source.data['pp'][0]} - {pmatrix(csource.data['ap'])} $$ <br> $$ \\times {pmatrix(csource.data['s'])}^\\top = {source.data['ciph'][0]} $$", width=750, height=50)
     dec_pair2 = Div(text=f"$$ Dec({source.data['ciph'][0]})=" + r"\begin{cases} 0, & \text{if } x \sim 0 \\ 1, & \text{if } x \sim " + f"{source.data['q'][0]}/2" + r"\end{cases}" + f" = {source.data['dec'][0]}$$", width=600, height=50)
 
 
     download_button = Button(label="Download", button_type="success")
-    download_button.js_on_event("button_click", CustomJS(args=dict(source=lwe_to_json(bsource.data['A'], csource.data['s'], dsource.data['e'], bsource.data['B'], csource.data['ap'], source.data['pp'][0] ,source.data['ciph'][0] ,source.data['dec'][0])),
+    download_button.js_on_event("button_click", CustomJS(args=dict(source=ret),
                             code=open(join(dirname(__file__), "download.js")).read()))
 
 

@@ -1,4 +1,4 @@
-from bokeh.models import ColumnDataSource, Div, Slider, TextInput, Range1d, Arrow, OpenHead, NormalHead, TapTool, Button, RadioButtonGroup
+from bokeh.models import ColumnDataSource, Div, Range1d, Arrow, OpenHead, NormalHead, Button
 from bokeh.layouts import row, column
 from bokeh.plotting import figure
 

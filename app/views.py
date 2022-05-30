@@ -1,10 +1,10 @@
-import json
 from bokeh.embed import server_document
 from flask import jsonify, render_template
 from . import app
 import os
 
 ip = os.environ.get('IP')
+ip = "localhost"
 
 @app.route('/', methods=['GET'])
 def babai_page():

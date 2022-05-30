@@ -10,7 +10,7 @@ from app.lwe_basis import lwe_basis_app
 
 #from app.lwe import lwe_app
 ip = os.environ.get('IP')
-
+ip = "localhost"
 
 def app_worker():
     server = Server({'/babai' : babai_app, '/alg' : alg_app, '/lwe_basis' : lwe_basis_app}, io_loop=IOLoop(), allow_websocket_origin=[ip], port=50007)
