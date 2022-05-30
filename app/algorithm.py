@@ -44,7 +44,7 @@ def alg_app(doc):
     
     #Parameters calc
     def calculate_lwe_params(n,q):
-        m = int(np.ceil(1.1 * np.log(q) * n))
+        m = int(np.ceil(1.1 * np.log(q) * n)) #1.1 works much better in lower dimensions than 2
         A = np.random.randint(low=-q,high=q,size=(m,n))
         s = np.random.randint(low=-q,high=q,size=n)
         e = np.random.randint(-1,1,size=m)
@@ -136,7 +136,7 @@ def alg_app(doc):
 
 
     def lwe_keygen_callback(event):
-
+        #Sanitization and upper input limits
         try:
             n = int(n_input.value)
             if n > 1000:
