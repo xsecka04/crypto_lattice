@@ -5,11 +5,11 @@ from bokeh.events import Tap
 
 import random
 import numpy as np
-from sympy import *
 
 
 
 def babai_app(doc):
+
     def generate_lattice(basis):
         xval = []
         yval = []
