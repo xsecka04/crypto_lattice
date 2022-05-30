@@ -9,6 +9,7 @@ import numpy as np
 
 
 def babai_app(doc):
+
     def generate_lattice(basis):
         xval = []
         yval = []

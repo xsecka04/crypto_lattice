@@ -8,7 +8,7 @@ from app.algorithm import alg_app
 from app.lwe_basis import lwe_basis_app
 
 ip = os.environ.get('IP')
-#ip = "localhost"
+#ip = "localhost" #use in case of venv deployment
 
 def app_worker():
     server = Server({'/babai' : babai_app, '/alg' : alg_app, '/lwe_basis' : lwe_basis_app}, io_loop=IOLoop(), allow_websocket_origin=[ip], port=50007)
@@ -22,5 +22,5 @@ Thread(target=app_worker).start()
 
 if __name__ == "__main__":
     from waitress import serve #use this in production environment
-    serve(app, host="0.0.0.0", port=80)
+    serve(app, host="0.0.0.0", port=80) #use this in production environment
     #app.run(debug=True, host="localhost", port=80) #use this in dev environment

@@ -7,7 +7,7 @@ import numpy as np
 
 def lwe_basis_app(doc):
 
-
+    #numPy parser to LaTex
     def pmatrix(a):
         if len(a.shape) > 2:
             raise ValueError('bmatrix can at most display two dimensions')
@@ -17,7 +17,7 @@ def lwe_basis_app(doc):
         rv +=  [r'\end{pmatrix}']
         return '\n'.join(rv)
 
-
+    #Lattice generator
     def generate_lattice(basis):
         xval = []
         yval = []
@@ -31,6 +31,7 @@ def lwe_basis_app(doc):
                 yval.append(ynew)
         return xval, yval
 
+    #LWE calculation
     def calculate_lwe(n,m,q,message):
         A = np.random.randint(low=-q,high=q,size=(m,n))
         s = np.random.randint(low=-q,high=q,size=n)
@@ -63,18 +64,17 @@ def lwe_basis_app(doc):
 
     basis = A
     x,y = generate_lattice(basis)
+    #Applying the basis to secret vector
     secx=s[0]*basis[0][0] + s[1]*basis[0][1]
     secy=s[0]*basis[1][0] + s[1]*basis[1][1]
-
+    
+    #Applying the basis to public vector
     pubx=s[0]*basis[0][0] + s[1]*basis[0][1] + e[0]
     puby=s[0]*basis[1][0] + s[1]*basis[1][1] + e[1]
 
-    epx=np.sin((2*np.pi/17)*ep)
-    epy=np.cos((2*np.pi/17)*ep)
-
     source = ColumnDataSource(data=dict(x=x, y=y))
     bsource = ColumnDataSource(data=dict(x=basis[0], y=basis[1]))
-    csource = ColumnDataSource(data=dict(pubx=[pubx], puby=[puby], secx=[secx], secy=[secy], epx=[epx], epy=[epy]))
+    csource = ColumnDataSource(data=dict(pubx=[pubx], puby=[puby], secx=[secx], secy=[secy]))
 
     dsource = ColumnDataSource(data=dict(A=A, B=B))
     esource = ColumnDataSource(data=dict(s=s))
@@ -106,19 +106,6 @@ def lwe_basis_app(doc):
     p.add_layout(secret)
     p.add_layout(public)
 
-
-
-    p2 = figure(plot_width=400, plot_height=400, match_aspect=True, tools="pan, wheel_zoom, reset, save") 
-
-
-    p2.x_range = Range1d(-1.3, 1.3)
-    p2.y_range = Range1d(-1.3, 1.3)
-
-
-    p2.circle(0,0,radius=1,fill_color=None,line_color='OliveDrab')
-    p2.circle('epx', 'epy', source=csource,size=10,color="navy")
-
-
     def lwe_callback(event):
         A,s,e,B,decrypted,ep = calculate_lwe(2,2,17,message)
 
@@ -127,9 +114,6 @@ def lwe_basis_app(doc):
 
         secx=s[0]*basis[0][0] + s[1]*basis[0][1]
         secy=s[0]*basis[1][0] + s[1]*basis[1][1]
-
-        epx=np.sin((2*np.pi/17)*ep)
-        epy=np.cos((2*np.pi/17)*ep)
 
         pubx=s[0]*basis[0][0] + s[1]*basis[0][1] + e[0]
         puby=s[0]*basis[1][0] + s[1]*basis[1][1] + e[1]
@@ -143,7 +127,7 @@ def lwe_basis_app(doc):
 
         source.data = dict(x=x, y=y)
         bsource.data = dict(x=basis[0], y=basis[1])
-        csource.data = dict(pubx=[pubx], puby=[puby], secx=[secx], secy=[secy], epx=[epx], epy=[epy])
+        csource.data = dict(pubx=[pubx], puby=[puby], secx=[secx], secy=[secy])
 
         private.text = f"Private key: $$s={pmatrix(s)}$$, $$e={pmatrix(e)}$$"
         public.text = f"Public key: $$A={pmatrix(A)}$$, $$B={pmatrix(B)}$$"
@@ -158,8 +142,6 @@ def lwe_basis_app(doc):
 
     equation = Div(text=f"""$${pmatrix(dsource.data['A'])} {pmatrix(esource.data['s'])}^\\top + {pmatrix(fsource.data['e'])}^\\top = {pmatrix(dsource.data['B'])}^\\top (\\bmod 17)$$""", 
     width=300, height=200, style={'font-size': '100%', 'margin-top': '170px'})
-
-
 
     controls = column(button, private, public)
 
